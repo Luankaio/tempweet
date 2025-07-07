@@ -20,7 +20,7 @@ pipeline {
                     sh 'docker-compose down || true'
 
                     echo "Construindo e subindo serviços..."
-                    sh 'docker-compose up -d --build'
+                    sh 'docker-compose up -d --build --no-cache'
                 }
             }
         }
