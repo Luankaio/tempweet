@@ -11,12 +11,12 @@ async def create_user(user_data: UserCreate, db=Depends(get_database)):
     user_dict = user_data.model_dump()
     
     # Verificar se username já existe
-    existing_user = await db.users.find_one({"username": user_dict["username"]})
+    existing_user = db.users.find_one({"username": user_dict["username"]})
     if existing_user:
         raise HTTPException(status_code=400, detail="Username já existe")
     
     # Verificar se email já existe
-    existing_email = await db.users.find_one({"email": user_dict["email"]})
+    existing_email = db.users.find_one({"email": user_dict["email"]})
     if existing_email:
         raise HTTPException(status_code=400, detail="Email já existe")
     
@@ -24,14 +24,14 @@ async def create_user(user_data: UserCreate, db=Depends(get_database)):
     user = User(**user_dict)
     user_dict = user.model_dump()
     
-    await db.users.insert_one(user_dict)
+    db.users.insert_one(user_dict)
     return user.serialize()
 
 @router.get("/", response_model=List[dict])
 async def get_users(db=Depends(get_database)):
     """Listar todos os usuários"""
     users = []
-    async for user_data in db.users.find():
+    for user_data in db.users.find():
         user = User(**user_data)
         users.append(user.serialize())
     return users
@@ -39,7 +39,7 @@ async def get_users(db=Depends(get_database)):
 @router.get("/{user_id}", response_model=dict)
 async def get_user(user_id: str, db=Depends(get_database)):
     """Buscar usuário por ID"""
-    user_data = await db.users.find_one({"user_id": user_id})
+    user_data = db.users.find_one({"user_id": user_id})
     if not user_data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
@@ -49,7 +49,7 @@ async def get_user(user_id: str, db=Depends(get_database)):
 @router.delete("/{user_id}")
 async def delete_user(user_id: str, db=Depends(get_database)):
     """Deletar usuário"""
-    result = await db.users.delete_one({"user_id": user_id})
+    result = db.users.delete_one({"user_id": user_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     

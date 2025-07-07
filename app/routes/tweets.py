@@ -10,7 +10,7 @@ router = APIRouter(prefix="/tweets", tags=["tweets"])
 async def create_tweet(tweet_data: TweetCreate, db=Depends(get_database)):
     """Criar um novo tweet"""
     # Verificar se o usuário existe
-    user = await db.users.find_one({"user_id": tweet_data.user_id})
+    user = db.users.find_one({"user_id": tweet_data.user_id})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
@@ -18,7 +18,7 @@ async def create_tweet(tweet_data: TweetCreate, db=Depends(get_database)):
     tweet = Tweet(**tweet_data.model_dump())
     tweet_dict = tweet.model_dump()
     
-    await db.tweets.insert_one(tweet_dict)
+    db.tweets.insert_one(tweet_dict)
     return tweet.serialize()
 
 @router.get("/", response_model=List[dict])
@@ -33,7 +33,7 @@ async def get_tweets(skip: int = 0, limit: int = 20, db=Depends(get_database)):
 @router.get("/{tweet_id}", response_model=dict)
 async def get_tweet(tweet_id: str, db=Depends(get_database)):
     """Buscar tweet por ID"""
-    tweet_data = await db.tweets.find_one({"tweet_id": tweet_id})
+    tweet_data = db.tweets.find_one({"tweet_id": tweet_id})
     if not tweet_data:
         raise HTTPException(status_code=404, detail="Tweet não encontrado")
     
@@ -49,7 +49,7 @@ async def update_tweet(tweet_id: str, tweet_update: TweetUpdate, db=Depends(get_
     
     update_data["updated_at"] = datetime.utcnow()
     
-    result = await db.tweets.update_one(
+    result = db.tweets.update_one(
         {"tweet_id": tweet_id}, 
         {"$set": update_data}
     )
@@ -57,14 +57,14 @@ async def update_tweet(tweet_id: str, tweet_update: TweetUpdate, db=Depends(get_
     if result.matched_count == 0:
         raise HTTPException(status_code=404, detail="Tweet não encontrado")
     
-    tweet_data = await db.tweets.find_one({"tweet_id": tweet_id})
+    tweet_data = db.tweets.find_one({"tweet_id": tweet_id})
     tweet = Tweet(**tweet_data)
     return tweet.serialize()
 
 @router.delete("/{tweet_id}")
 async def delete_tweet(tweet_id: str, db=Depends(get_database)):
     """Deletar tweet"""
-    result = await db.tweets.delete_one({"tweet_id": tweet_id})
+    result = db.tweets.delete_one({"tweet_id": tweet_id})
     if result.deleted_count == 0:
         raise HTTPException(status_code=404, detail="Tweet não encontrado")
     
@@ -74,11 +74,11 @@ async def delete_tweet(tweet_id: str, db=Depends(get_database)):
 async def like_tweet(tweet_id: str, user_id: str, db=Depends(get_database)):
     """Curtir ou descurtir um tweet"""
     # Verificar se o usuário existe
-    user = await db.users.find_one({"user_id": user_id})
+    user = db.users.find_one({"user_id": user_id})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    tweet_data = await db.tweets.find_one({"tweet_id": tweet_id})
+    tweet_data = db.tweets.find_one({"tweet_id": tweet_id})
     if not tweet_data:
         raise HTTPException(status_code=404, detail="Tweet não encontrado")
     
@@ -86,14 +86,14 @@ async def like_tweet(tweet_id: str, user_id: str, db=Depends(get_database)):
     
     if user_id in likes:
         # Remover curtida
-        await db.tweets.update_one(
+        db.tweets.update_one(
             {"tweet_id": tweet_id},
             {"$pull": {"likes": user_id}}
         )
         message = "Curtida removida"
     else:
         # Adicionar curtida
-        await db.tweets.update_one(
+        db.tweets.update_one(
             {"tweet_id": tweet_id},
             {"$push": {"likes": user_id}}
         )
@@ -105,11 +105,11 @@ async def like_tweet(tweet_id: str, user_id: str, db=Depends(get_database)):
 async def add_comment(tweet_id: str, comment_data: CommentCreate, db=Depends(get_database)):
     """Adicionar comentário a um tweet"""
     # Verificar se o usuário existe
-    user = await db.users.find_one({"user_id": comment_data.user_id})
+    user = db.users.find_one({"user_id": comment_data.user_id})
     if not user:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")
     
-    tweet_data = await db.tweets.find_one({"tweet_id": tweet_id})
+    tweet_data = db.tweets.find_one({"tweet_id": tweet_id})
     if not tweet_data:
         raise HTTPException(status_code=404, detail="Tweet não encontrado")
     
@@ -117,12 +117,12 @@ async def add_comment(tweet_id: str, comment_data: CommentCreate, db=Depends(get
     comment = Comment(**comment_data.model_dump())
     comment_dict = comment.model_dump()
     
-    await db.tweets.update_one(
+    db.tweets.update_one(
         {"tweet_id": tweet_id},
         {"$push": {"comments": comment_dict}}
     )
     
-    updated_tweet_data = await db.tweets.find_one({"tweet_id": tweet_id})
+    updated_tweet_data = db.tweets.find_one({"tweet_id": tweet_id})
     updated_tweet = Tweet(**updated_tweet_data)
     return updated_tweet.serialize()
 
