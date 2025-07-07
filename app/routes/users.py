@@ -29,7 +29,6 @@ async def create_user(user_data: UserCreate, db=Depends(get_database)):
 
 @router.get("/", response_model=List[dict])
 async def get_users(db=Depends(get_database)):
-    """Listar todos os usuários"""
     users = []
     for user_data in db.users.find():
         user = User(**user_data)
@@ -38,7 +37,6 @@ async def get_users(db=Depends(get_database)):
 
 @router.get("/{user_id}", response_model=dict)
 async def get_user(user_id: str, db=Depends(get_database)):
-    """Buscar usuário por ID"""
     user_data = db.users.find_one({"user_id": user_id})
     if not user_data:
         raise HTTPException(status_code=404, detail="Usuário não encontrado")

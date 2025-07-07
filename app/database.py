@@ -15,5 +15,4 @@ class Database:
 database = Database()
 
 def get_database():
-    """Retorna a instância do database"""
     return database.db
