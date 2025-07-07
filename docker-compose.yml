@@ -10,8 +10,6 @@ services:
     depends_on:
       - mongo
     network_mode: "host"
-    depends_on:
-      - mongo
 
   mongo:
     image: mongo:latest
