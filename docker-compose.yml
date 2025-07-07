@@ -6,7 +6,7 @@ services:
     volumes:
       - .:/app
     environment:
-      - DB_URI=mongodb://mongo:27017
+      - DB_URI=mongodb://localhost:27017
     depends_on:
       - mongo
     network_mode: "host"
